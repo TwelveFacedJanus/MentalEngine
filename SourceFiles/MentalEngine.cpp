@@ -1,14 +1,12 @@
 ﻿// MentalEngine.cpp: определяет точку входа для приложения.
 //
-
-#include "MentalEngine.h"
-#include "Application.hpp"
+#include "../Include/MentalEngine.h"
 
 using namespace std;
 
 int main()
 {
-	Application app = Application("Mental Engine (OpenGL).");
-	app.run();
+	Window win = Window("Mental Engine (OpenGL).");
+	win.run();
 	return 0;
 }

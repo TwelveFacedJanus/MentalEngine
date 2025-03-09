@@ -7,7 +7,7 @@ endif()
 
 project("MentalEngine")
 
-add_executable(MentalEngine "MentalEngine.cpp" "MentalEngine.h")
+add_executable(MentalEngine "SourceFiles/MentalEngine.cpp" "Include/MentalEngine.h" "SourceFiles/Application.cpp"   "Include/Window.h" "SourceFiles/video/Window.cpp" "Include/NumbersLangDef.h" "SourceFiles/graphics/Object.cpp" "Include/Object.h" "Include/ObjectManager.h" "SourceFiles/graphics/ObjectManager.cpp" "SourceFiles/video/Ui.cpp" "Include/Ui.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MentalEngine PROPERTY CXX_STANDARD 20)
@@ -24,8 +24,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw)
 
 # Set paths for GLEW based on your project structure
-set(GLEW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/glew/include")
-set(GLEW_LIB_DIR "${CMAKE_SOURCE_DIR}/glew/lib/Release/x64")
+set(GLEW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/Dependencies/glew/include")
+set(GLEW_LIB_DIR "${CMAKE_SOURCE_DIR}/Dependencies/glew/lib/Release/x64")
 
 # Check if the GLEW include directory exists
 if (NOT EXISTS "${GLEW_INCLUDE_DIR}")
