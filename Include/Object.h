@@ -2,18 +2,13 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
-typedef enum ObjectType {
-	Rectangle,
-	Cube,
-	Node2D,
-} ObjectType;
 
-typedef struct Object {
-	char* name;
-	ObjectType object_type;
-	ObjectType* child_comps;
-} Object;
+#include <GL/glew.h> // Include OpenGL headers
 
 
+
+// Object.h
+//Object initialize_triangle(); // Declaration
+//void render_triangle(Object* obj); // Declaration
 
 #endif // OBJECT_H_
