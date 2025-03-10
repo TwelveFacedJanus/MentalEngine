@@ -20,6 +20,7 @@ typedef struct Object {
     ObjectType obj_type;
     std::vector<Object*> child_comps;
     GLuint VAO, VBO, EBO;
+    GLuint shaderProgram;
 } Object;
 
 Object initialize_triangle(); // Declaration

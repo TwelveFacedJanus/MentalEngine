@@ -16,7 +16,7 @@ public:
 
     void initializeImGui(GLFWwindow* window);
 
-    void default_frame();
+    void default_frame(GLuint textureID);
 
     void render_imgui();
     

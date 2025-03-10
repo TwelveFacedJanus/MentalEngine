@@ -103,6 +103,22 @@ Window::Window(const char* title, int width, int height)
 
     // Add the triangle to the ObjectManager
     objm.addObject(triangle);
+
+    // Create FBO and texture
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, fboWidth, fboHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Framebuffer is not complete!" << std::endl;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Window::~Window()
@@ -121,13 +137,20 @@ void Window::run() {
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        // Render the triangle
+
+        // Render your OpenGL content
         render();
+        //MainMenu();
+        //ProjectStructureTree();
+        //FileSystem();
+        // Start a new ImGui frame and render it
+        UI::default_frame(getFBOTexture());
+        UI::FileSystem();
+        UI::MainMenu();
+        UI::ProjectStructureTree();
+        UI::render_imgui();
 
-        // Render ImGui
-        default_frame();
-        render_imgui();
-
+        // Swap buffers and poll events
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -189,7 +212,22 @@ void Window::processInput()
 }
 
 void Window::render() {
+    // Render to FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glViewport(0, 0, fboWidth, fboHeight);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set clear color for FBO
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glUseProgram(shaderProgram);
+
+    // Render the triangle
     objm.render();
+
+    // Switch back to default framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, 800, 600); // Reset viewport to window size
+    glClearColor(0.9f, 0.0f, 0.0f, 1.0f); // Set clear color for default framebuffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+GLuint Window::getFBOTexture() const {
+    return texture;
 }

@@ -12,14 +12,12 @@
 class Window : public UI
 {
 public:
-    Window(const char* title, int width = 800, int height = 600);
+    Window(const char* title, int width = 1920, int height = 1080);
     ~Window();
     void run();
 
 private:
     GLFWwindow* window;
-    ObjectManager objm;
-    GLuint shaderProgram;
 
     void initializeGLFW();
     void createWindow(const char* title, int width, int height);
@@ -28,6 +26,13 @@ private:
     void initializeImGui(); // Initialize ImGui
     void processInput();
     void render();
+    GLuint getFBOTexture() const;
+
+    ObjectManager objm;
+    GLuint framebuffer, texture;
+    int fboWidth = 800, fboHeight = 600; // Framebuffer dimensions
+
+    GLuint shaderProgram;
 };
 
 #endif

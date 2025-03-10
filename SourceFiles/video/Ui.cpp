@@ -6,37 +6,29 @@ UI::UI() : window(nullptr) {}
 void UI::initializeImGui(GLFWwindow* window) {
     this->window = window;
 
-    // Настройка контекста ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Включить управление с клавиатуры
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Включить докинг
-    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable moving frames from GLFW window.
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Enable docking
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Disable viewports for now
 
-    // Настройка стиля ImGui
     ImGui::StyleColorsDark();
-
-    // Настройка бэкендов для GLFW и OpenGL
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
-    // Отладочная информация
-    std::cout << "ImGui Version: " << ImGui::GetVersion() << std::endl;
 }
-void UI::default_frame() {
-    // Начало нового кадра ImGui
+
+void UI::default_frame(GLuint textureID) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // Создание полноэкранного докинг-пространства
+    // Create a docking space
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    // Флаги для докинг-пространства
     ImGuiWindowFlags window_flags =
         ImGuiWindowFlags_NoDocking |
         ImGuiWindowFlags_NoTitleBar |
@@ -46,33 +38,34 @@ void UI::default_frame() {
         ImGuiWindowFlags_NoBringToFrontOnFocus |
         ImGuiWindowFlags_NoNavFocus;
 
-    // Начало родительского окна для докинг-пространства
     ImGui::Begin("Docking Space", nullptr, window_flags);
-
-    // Создание докинг-пространства
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
-
-    // Завершение родительского окна
     ImGui::End();
 
-    // Render the main menu
-    //MainMenu();
-    ProjectStructureTree();
-    FileSystem();
+    ImGuiWindowFlags window_flags_gl =
+        ImGuiWindowFlags_AlwaysUseWindowPadding |
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoScrollWithMouse;
 
-    // Пример окна ImGui
-    ImGui::Begin("Hello, ImGui!", nullptr);
-    ImGui::Text("Its just ImGui.");
-    if (ImGui::Button("Press me"))
-    {
-        std::cout << "Кнопка нажата!" << std::endl;
+    ImGui::ShowDemoWindow();
+    // Render other ImGui windows
+    ImGui::Begin("Hello, ImGui!");
+    ImGui::Text("This is a test window.");
+    if (ImGui::Button("Press me")) {
+        std::cout << "Button pressed!" << std::endl;
     }
     ImGui::End();
 
-    // Show ImGui demo window (for testing)
-    ImGui::ShowDemoWindow();
+    // Add a window to display the FBO texture
+    ImGui::Begin("OpenGL Viewport", nullptr, window_flags_gl);
+    ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
+    ImGui::Image((ImTextureID)(intptr_t)textureID, ImGui::GetWindowSize());
+    ImGui::End();
 }
+
 
 void UI::render_imgui() {
     // Рендеринг ImGui
