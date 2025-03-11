@@ -14,12 +14,12 @@ add_executable(MentalEngine
   "SourceFiles/video/Window.cpp" 
   "Include/NumbersLangDef.h" 
   #"SourceFiles/graphics/Object.cpp" 
-  #"Include/Object.h" 
+  "Include/Object.h" 
   "Include/ObjectManager.h" 
   "SourceFiles/graphics/ObjectManager.cpp" 
   "SourceFiles/video/Ui.cpp" 
   "Include/Ui.h"
- "SourceFiles/Utils.cpp")
+ "SourceFiles/Utils.cpp" "Include/Shader.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MentalEngine PROPERTY CXX_STANDARD 20)
@@ -41,7 +41,13 @@ FetchContent_Declare(
   GIT_TAG docking
 )
 
-FetchContent_MakeAvailable(glfw imgui)
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG 	bf71a834948186f4097caa076cd2663c69a10e1e #refs/tags/1.0.1
+)
+
+FetchContent_MakeAvailable(glfw imgui glm)
 
 file(COPY shaders DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY fonts DESTINATION ${CMAKE_BINARY_DIR})
@@ -62,7 +68,7 @@ endif()
 
 # Add GLEW include directory
 target_include_directories(MentalEngine PRIVATE ${GLEW_INCLUDE_DIR} ${glfw_SOURCE_DIR}/include)
-
+target_link_libraries(MentalEngine PRIVATE glm::glm)
 # Link GLEW and OpenGL libraries
 target_link_directories(MentalEngine PRIVATE ${GLEW_LIB_DIR})
 target_link_libraries(MentalEngine PRIVATE glfw glew32s opengl32)
@@ -81,7 +87,7 @@ file(GLOB IMGUI_SOURCES
 target_include_directories(MentalEngine PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 
 # Add ImGui sources to the executable
-target_sources(MentalEngine PRIVATE ${IMGUI_SOURCES} "SourceFiles/Utils.cpp")
+target_sources(MentalEngine PRIVATE ${IMGUI_SOURCES} "SourceFiles/Utils.cpp" "Include/Shader.h")
 
 message(STATUS "GLEW include directory: ${GLEW_INCLUDE_DIR}")
 message(STATUS "GLEW library directory: ${GLEW_LIB_DIR}")
