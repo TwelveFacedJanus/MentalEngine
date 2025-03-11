@@ -2,6 +2,7 @@
 #ifndef UI_H_
 #define UI_H_
 
+#include "ObjectManager.h"
 #include <GLFW/glfw3.h>
 // ImGui includes
 #include "imgui.h"
@@ -11,7 +12,7 @@
 #include <filesystem> // Include the filesystem library
 #include <fstream>
 #include <sstream>
-#include "ObjectManager.h"
+
 namespace fs = std::filesystem; // Alias for convenience
 
 static int InputTextCallback(ImGuiInputTextCallbackData* data);

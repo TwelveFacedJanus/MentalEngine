@@ -60,7 +60,7 @@ void Window::run() {
         UI::default_frame(getFBOTexture());
         UI::FileSystem();
         UI::MainMenu();
-        UI::ProjectStructureTree();
+        UI::ProjectStructureTree(this->objm);
         UI::render_imgui();
 
         // Swap buffers and poll events

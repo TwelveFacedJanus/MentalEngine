@@ -253,18 +253,18 @@ void UI::loadFileContent() {
 }
 void UI::ProjectStructureTree(ObjectManager& objectManager) {
     ImGui::Begin("Components Tree");
-
+    
     // Рекурсивная функция для отображения дерева объектов
     std::function<void(const Object&)> displayObjectTree = [&](const Object& obj) {
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         if (obj.child_comps.empty()) {
             node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // Узлы без детей будут листьями
-            ImGui::TreeNodeEx(obj.name.c_str(), node_flags);
+            ImGui::TreeNodeEx(obj.name, node_flags);
         }
         else {
             // Используем уникальный ID для узла
-            ImGuiID node_id = ImGui::GetID(obj.name.c_str());
-            bool node_open = ImGui::TreeNodeEx(node_id, node_flags, "%s", obj.name.c_str());
+            ImGuiID node_id = ImGui::GetID(obj.name);
+            bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)node_id, node_flags, "%s", obj.name);
             if (node_open) {
                 for (const auto& child : obj.child_comps) {
                     displayObjectTree(child);
@@ -275,7 +275,7 @@ void UI::ProjectStructureTree(ObjectManager& objectManager) {
         };
 
     // Отображаем корневой узел и его детей
-    const std::vector<Object>& componentTree = objectManager.componentTree();
+    std::vector<Object>& componentTree = objectManager.componentTree;
     for (const auto& obj : componentTree) {
         displayObjectTree(obj);
     }
