@@ -19,7 +19,7 @@ typedef struct Object
 {
 	const char* name;
 	ObjectType obj_type;
-	std::vector<Object*> child_comps;
+	std::vector<Object> child_comps;
 	GLuint VAO, VBO, EBO;
 	GLuint shader_program;
 
@@ -33,6 +33,14 @@ typedef struct Object
 		if (objt == ObjectType::Triangle) {
 			this->initialize_triangle();
 		}
+		else if (objt == ObjectType::Node2D) {
+			this->initialize_node2d();
+		}
+		this->shader_program = 0;
+	}
+
+	void initialize_node2d() {
+		std::cout << "Node 2D initialized!\n";
 	}
 
 	void initialize_triangle(void)
@@ -126,15 +134,18 @@ typedef struct Object
 	
 
 	void render(void) {
-		if (this->shader_program) {
+		if (!this->child_comps.empty()) {
+			for (auto& o : this->child_comps) {
+				o.render();
+			}
+		}
+		if (this->shader_program != 0) {
 			this->reload_shaders();
 			glUseProgram(this->shader_program);
 		}
 		glBindVertexArray(this->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
-
-		reload_shaders();
 	}
 
 	void reload_shaders(void) {
@@ -158,6 +169,11 @@ typedef struct Object
 			}
 		}
 	}
+	/*
+	void add_child_obj(Object obj) {
+		this->child_comps.push_back(obj);
+	}
+	*/
 	~Object() { }
 } Object;
 

@@ -6,21 +6,17 @@
 ObjectManager::ObjectManager() {
     // Initialize the member variable, not a local variable
     componentTree = std::vector<Object>();
+    Object root_node = Object(ObjectType::Node2D, "root_node");
+    componentTree.push_back(root_node);
 }
 
 void ObjectManager::addObject(Object obj) {
-    componentTree.push_back(obj);
+    componentTree[0].child_comps.push_back(obj);
+    //componentTree.push_back(obj);
     std::cout << "Object added: " << obj.name << std::endl;
 }
 
 void ObjectManager::render() {
-    static float rotationAngle = 0.0f; // Static variable to keep track of rotation angle
-    rotationAngle += 1.0f; // Increment the rotation angle
-
-    if (rotationAngle > 360.0f) {
-        rotationAngle -= 360.0f; // Keep the angle within 0-360 degrees
-    }
-
     for (auto& obj : componentTree) {
         obj.render();
     }

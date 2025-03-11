@@ -16,8 +16,9 @@ public:
     void addObject(Object obj);
     void render();
     ~ObjectManager();
-private:
     std::vector<Object> componentTree;
+
+ 
 };
 
 #endif //OBJECT_MANAGER_H_

@@ -11,6 +11,7 @@
 #include <filesystem> // Include the filesystem library
 #include <fstream>
 #include <sstream>
+#include "ObjectManager.h"
 namespace fs = std::filesystem; // Alias for convenience
 
 static int InputTextCallback(ImGuiInputTextCallbackData* data);
@@ -31,6 +32,7 @@ public:
     void FileSystem();
     void loadFileContent();
     void saveFileContent();
+    void ProjectStructureTree(ObjectManager& objectManager);
 
     ~UI();
 
