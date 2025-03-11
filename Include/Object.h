@@ -118,19 +118,47 @@ typedef struct Object
 		std::cout << "Shaders has been loaded!\n";
 		this->shader_program = createShaderProgram(vertex_shader_source.c_str(), fragment_shader_source.c_str());
 		std::cout << "Shader program has been created!\n";
-		
 		this->vertex_shader_path = vsp;
 		this->fragment_shader_path = fsp;
 		this->last_vs_mt = std::filesystem::last_write_time(this->vertex_shader_path);
 		this->last_fs_mt = std::filesystem::last_write_time(this->fragment_shader_path);
 	}
+	
 
 	void render(void) {
-		if (!this->shader_program) { glUseProgram(this->shader_program); }
+		if (this->shader_program) {
+			this->reload_shaders();
+			glUseProgram(this->shader_program);
+		}
 		glBindVertexArray(this->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
+
+		reload_shaders();
 	}
+
+	void reload_shaders(void) {
+		auto currentVertexShaderModTime = std::filesystem::last_write_time(this->vertex_shader_path);
+		auto currentFragmentShaderModTime = std::filesystem::last_write_time(this->fragment_shader_path);
+
+		if (currentVertexShaderModTime != this->last_vs_mt ||
+			currentFragmentShaderModTime != this->last_fs_mt) {
+			std::string vertexShaderSource = loadShaderSource(this->vertex_shader_path);
+			std::string fragmentShaderSource = loadShaderSource(this->fragment_shader_path);
+
+			if (!vertexShaderSource.empty() && !fragmentShaderSource.empty()) {
+				GLuint newShaderProgram = createShaderProgram(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
+				if (newShaderProgram) {
+					glDeleteProgram(this->shader_program);
+					this->shader_program = newShaderProgram;
+					this->last_vs_mt = currentVertexShaderModTime;
+					this->last_fs_mt = currentFragmentShaderModTime;
+					std::cout << "Shaders reloaded for object: " << this->name << std::endl;
+				}
+			}
+		}
+	}
+	~Object() { }
 } Object;
 
 #endif // OBJECT_H_

@@ -11,6 +11,7 @@ Window::Window(const char* title, int width, int height)
     objm = ObjectManager();
     // Create a triangle object
     Object triangle = Object(ObjectType::Triangle, "Simple Triangle");
+    triangle.applyShaders("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
     //Object cube = initialize_cube();
     // Add the triangle to the ObjectManager
     objm.addObject(triangle);

@@ -4,7 +4,6 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "Object.h"
 #include "ObjectManager.h"
 #include "Ui.h"
 

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iostream>
 
-std::string loadShaderSource(const std::string& filePath) {
+inline std::string loadShaderSource(const std::string& filePath) {
     std::ifstream shaderFile(filePath);
     if (!shaderFile.is_open()) {
         std::cerr << "ERROR: Could not open shader file: " << filePath << std::endl;
@@ -20,7 +20,7 @@ std::string loadShaderSource(const std::string& filePath) {
     return shaderStream.str();
 }
 
-GLuint compileShader(const char* shaderSource, GLenum shaderType) {
+inline GLuint compileShader(const char* shaderSource, GLenum shaderType) {
     GLuint shader = glCreateShader(shaderType);
     glShaderSource(shader, 1, &shaderSource, nullptr);
     glCompileShader(shader);
@@ -37,7 +37,7 @@ GLuint compileShader(const char* shaderSource, GLenum shaderType) {
     return shader;
 }
 
-GLuint createShaderProgram(const char* vertexShaderSource, const char* fragmentShaderSource) {
+inline GLuint createShaderProgram(const char* vertexShaderSource, const char* fragmentShaderSource) {
     GLuint vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
     GLuint fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 
@@ -62,6 +62,8 @@ GLuint createShaderProgram(const char* vertexShaderSource, const char* fragmentS
 
     return shaderProgram;
 }
+
+
 
 
 #endif // SHADER_H_
