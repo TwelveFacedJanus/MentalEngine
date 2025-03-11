@@ -44,6 +44,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glfw imgui)
 
 file(COPY shaders DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY fonts DESTINATION ${CMAKE_BINARY_DIR})
 
 # Set paths for GLEW based on your project structure
 set(GLEW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/Dependencies/glew/include")

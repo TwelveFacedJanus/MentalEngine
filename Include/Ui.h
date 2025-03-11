@@ -8,6 +8,12 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include <iostream>
+#include <filesystem> // Include the filesystem library
+#include <fstream>
+#include <sstream>
+namespace fs = std::filesystem; // Alias for convenience
+
+static int InputTextCallback(ImGuiInputTextCallbackData* data);
 
 class UI
 {
@@ -23,11 +29,18 @@ public:
     void MainMenu();
     void ProjectStructureTree();
     void FileSystem();
+    void loadFileContent();
+    void saveFileContent();
 
     ~UI();
 
 private:
     GLFWwindow* window;
+    std::string selectedFilePath; // Путь к выбранному файлу
+    std::string fileContent;      // Содержимое файла
+    bool isFileSelected = false;  // Флаг, указывающий, выбран ли файл
+    std::filesystem::file_time_type lastModificationTime;
+    std::string fileContentBuffer;
 };
 
 #endif // UI_H_

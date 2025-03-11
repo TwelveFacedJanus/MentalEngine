@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <filesystem>
+#include <chrono>
 #include "Object.h"
 
 typedef enum ObjectType {
@@ -21,24 +23,30 @@ typedef struct Object {
     std::vector<Object*> child_comps;
     GLuint VAO, VBO, EBO;
     GLuint shaderProgram;
+    std::string vertexShaderPath;
+    std::string fragmentShaderPath;
+    std::filesystem::file_time_type lastVertexShaderModTime;
+    std::filesystem::file_time_type lastFragmentShaderModTime;
 } Object;
 
 Object initialize_triangle(); // Declaration
 void render_triangle(Object* obj); // Declaration
 
+Object initialize_cube(); // Declaration
+void render_cube(Object* obj); // Declaration
+
 class ObjectManager
 {
 public:
-	ObjectManager();
+    ObjectManager();
 #ifdef MENTAL_BETA
-	void createObject(ObjectType obj_type);
+    void createObject(ObjectType obj_type);
 #endif
-	void addObject(Object obj);
-	void render();
-	~ObjectManager();
+    void addObject(Object obj);
+    void render();
+    ~ObjectManager();
 private:
-	std::vector<Object> componentTree;
+    std::vector<Object> componentTree;
 };
-
 
 #endif //OBJECT_MANAGER_H_

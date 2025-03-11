@@ -1,6 +1,16 @@
 #include "../../Include/Ui.h"
 
 
+static int InputTextCallback(ImGuiInputTextCallbackData* data) {
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+        // Изменяем размер буфера
+        std::string* str = (std::string*)data->UserData;
+        str->resize(data->BufTextLen);
+        data->Buf = &(*str)[0];
+    }
+    return 0;
+}
+
 UI::UI() : window(nullptr) {}
 
 void UI::initializeImGui(GLFWwindow* window) {
@@ -9,6 +19,7 @@ void UI::initializeImGui(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.Fonts->AddFontFromFileTTF("fonts/ttf/JetBrainsMono-Regular.ttf", 15);
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Enable docking
     // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Disable viewports for now
@@ -17,55 +28,86 @@ void UI::initializeImGui(GLFWwindow* window) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 }
-
 void UI::default_frame(GLuint textureID) {
+    if (isFileSelected) {
+        auto currentModificationTime = fs::last_write_time(selectedFilePath);
+        if (currentModificationTime != lastModificationTime) {
+            loadFileContent(); // Перезагружаем содержимое файла, если оно изменилось
+        }
+    }
+
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // Create a docking space
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
+        saveFileContent();
+    }
+
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    ImGuiWindowFlags window_flags =
-        ImGuiWindowFlags_NoDocking |
-        ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus;
-
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
     ImGui::Begin("Docking Space", nullptr, window_flags);
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
     ImGui::End();
 
-    ImGuiWindowFlags window_flags_gl =
-        ImGuiWindowFlags_AlwaysUseWindowPadding |
-        ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoScrollWithMouse;
+    ImGuiWindowFlags window_flags_gl = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+    ImGui::Begin("Viewport Tabs", nullptr, window_flags_gl);
+
+    if (ImGui::BeginTabBar("ViewportTabBar")) {
+        if (ImGui::BeginTabItem("OpenGL Viewport")) {
+            ImGui::Image((ImTextureID)(intptr_t)textureID, ImGui::GetContentRegionAvail());
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Editor")) {
+            if (isFileSelected) {
+                ImGui::Text("Editing: %s", selectedFilePath.c_str());
+
+                // Используем динамический буфер с поддержкой изменения размера
+                if (ImGui::InputTextMultiline("##Editor", &fileContentBuffer[0], fileContentBuffer.size() + 1, ImVec2(-1.0f, -1.0f),
+                    ImGuiInputTextFlags_CallbackResize, InputTextCallback, (void*)&fileContentBuffer)) {
+                    fileContent = fileContentBuffer; // Сохраняем изменения в fileContent
+                }
+            }
+            else {
+                ImGui::Text("No file selected. Select a file in the Filesystem.");
+            }
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
+
+    ImGui::End();
 
     ImGui::ShowDemoWindow();
-    // Render other ImGui windows
     ImGui::Begin("Hello, ImGui!");
     ImGui::Text("This is a test window.");
     if (ImGui::Button("Press me")) {
         std::cout << "Button pressed!" << std::endl;
     }
     ImGui::End();
-
-    // Add a window to display the FBO texture
-    ImGui::Begin("OpenGL Viewport", nullptr, window_flags_gl);
-    ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
-    ImGui::Image((ImTextureID)(intptr_t)textureID, ImGui::GetWindowSize());
-    ImGui::End();
 }
 
+void UI::saveFileContent() {
+    if (isFileSelected) {
+        std::ofstream file(selectedFilePath);
+        if (file.is_open()) {
+            file << fileContent;
+            file.close();
+            std::cout << "File saved successfully!" << std::endl;
+        }
+        else {
+            std::cout << "Failed to save file!" << std::endl;
+        }
+    }
+}
 
 void UI::render_imgui() {
     // Рендеринг ImGui
@@ -133,9 +175,82 @@ void UI::ProjectStructureTree() {
 void UI::FileSystem() {
     ImGui::Begin("Filesystem");
 
-    ImGui::End();
+    static fs::path currentDir = fs::current_path();
+    ImGui::Text("Current Directory: %s", currentDir.string().c_str());
 
+    if (currentDir.has_parent_path() && ImGui::Button("Up")) {
+        currentDir = currentDir.parent_path();
+    }
+
+    // Начинаем создание таблицы с 3 колонками: иконка, имя, размер
+    if (ImGui::BeginTable("FileSystemTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        // Заголовки колонок
+        ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, 20.0f);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+        ImGui::TableHeadersRow();
+
+        for (const auto& entry : fs::directory_iterator(currentDir)) {
+            std::string entryName = entry.path().filename().string();
+            bool isDirectory = fs::is_directory(entry.status());
+
+            ImGui::TableNextRow();
+
+            // Колонка с иконкой
+            ImGui::TableSetColumnIndex(0);
+            if (isDirectory) {
+                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "[FOLDER]");
+            }
+            else {
+                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[FILE]");
+            }
+
+            // Колонка с именем
+            ImGui::TableSetColumnIndex(1);
+            if (isDirectory) {
+                if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                    if (ImGui::IsMouseDoubleClicked(0)) {
+                        currentDir = entry.path();
+                    }
+                }
+            }
+            else {
+                if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                    selectedFilePath = entry.path().string();
+                    isFileSelected = true;
+                    loadFileContent(); // Загружаем содержимое файла
+                }
+            }
+
+            // Колонка с размером
+            ImGui::TableSetColumnIndex(2);
+            if (!isDirectory) {
+                ImGui::Text("%ld bytes", fs::file_size(entry));
+            }
+        }
+
+        ImGui::EndTable();
+    }
+
+    ImGui::End();
 }
+
+void UI::loadFileContent() {
+    if (isFileSelected) {
+        std::ifstream file(selectedFilePath);
+        if (file.is_open()) {
+            fileContent.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+            fileContentBuffer = fileContent; // Инициализируем буфер
+            file.close();
+            lastModificationTime = fs::last_write_time(selectedFilePath); // Обновляем время последнего изменения
+        }
+        else {
+            fileContent = "Failed to open file!";
+            fileContentBuffer = fileContent; // Инициализируем буфер
+        }
+    }
+}
+
 
 
 UI::~UI() {

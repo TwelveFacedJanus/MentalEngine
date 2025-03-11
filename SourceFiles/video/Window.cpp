@@ -100,9 +100,10 @@ Window::Window(const char* title, int width, int height)
 
     // Create a triangle object
     Object triangle = initialize_triangle();
-
+    Object cube = initialize_cube();
     // Add the triangle to the ObjectManager
     objm.addObject(triangle);
+    objm.addObject(cube);
 
     // Create FBO and texture
     glGenFramebuffers(1, &framebuffer);
