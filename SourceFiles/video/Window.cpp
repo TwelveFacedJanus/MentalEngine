@@ -1,4 +1,5 @@
 #include "../../Include/Window.h"
+#include <glm/ext/matrix_clip_space.hpp>
 
 Window::Window(const char* title, int width, int height)
     : window(nullptr)
@@ -8,9 +9,11 @@ Window::Window(const char* title, int width, int height)
     initializeGLEW();
     initializeOpenGLSettings();
     initializeImGui(); // Initialize ImGui
+
+    ec = EngineCamera();
     objm = ObjectManager();
     // Create a triangle object
-    Object triangle = Object(ObjectType::Triangle, "Simple Triangle");
+    Object triangle = Object(ObjectType::Triangle, "triangle");
     triangle.applyShaders("shaders/vertex_shader.glsl", "shaders/fragment_shader.glsl");
     //Object cube = initialize_cube();
     // Add the triangle to the ObjectManager
@@ -50,6 +53,8 @@ void Window::run() {
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        // Обновляем вид камеры
+        ec.updateViewMatrix();
 
         // Render your OpenGL content
         render();
@@ -108,6 +113,10 @@ void Window::initializeOpenGLSettings() {
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glViewport(0, 0, 800, 600); // Ensure this matches your window size
+
+    // Set the projection matrix
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    objm.set_projection_matrix(projection);
 }
 
 void Window::initializeImGui()
@@ -116,13 +125,39 @@ void Window::initializeImGui()
     UI::initializeImGui(window);
 }
 
-void Window::processInput()
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
+void Window::processInput() {
+    static float lastTime = glfwGetTime();
+    float currentTime = glfwGetTime();
+    float deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+
+    // Handle keyboard input
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        ec.processKeyboard(GLFW_KEY_W, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        ec.processKeyboard(GLFW_KEY_S, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        ec.processKeyboard(GLFW_KEY_A, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        ec.processKeyboard(GLFW_KEY_D, deltaTime);
+
+    // Handle mouse input
+    static double lastX = 400, lastY = 300;
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // Reverse subtraction because Y coordinates go from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+
+    ec.processMouseMovement(xoffset, yoffset);
+    ec.updateViewMatrix();
 }
+
 
 void Window::render() {
     // Render to FBO

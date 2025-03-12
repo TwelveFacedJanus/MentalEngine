@@ -5,6 +5,7 @@
 #include "Object.h"
 #include <vector>
 #include <iostream>
+#include <glm/ext/matrix_float4x4.hpp>
 
 class ObjectManager
 {
@@ -15,6 +16,7 @@ public:
 #endif
     void addObject(Object obj);
     void render();
+    void set_projection_matrix(glm::mat4 projection);
     ~ObjectManager();
     std::vector<Object> componentTree;
 

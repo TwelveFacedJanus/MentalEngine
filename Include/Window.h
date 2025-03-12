@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 #include "ObjectManager.h"
 #include "Ui.h"
-
-
+#include "EngineCamera.h"
+#include "Object.h"
 class Window : public UI
 {
 public:
@@ -32,6 +32,7 @@ private:
     int fboWidth = 800, fboHeight = 600; // Framebuffer dimensions
 
     GLuint shaderProgram;
+    EngineCamera ec;
 };
 
 #endif

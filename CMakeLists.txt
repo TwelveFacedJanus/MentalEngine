@@ -19,7 +19,7 @@ add_executable(MentalEngine
   "SourceFiles/graphics/ObjectManager.cpp" 
   "SourceFiles/video/Ui.cpp" 
   "Include/Ui.h"
- "SourceFiles/Utils.cpp" "Include/Shader.h")
+ "SourceFiles/Utils.cpp" "Include/Shader.h" "Include/EngineCamera.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET MentalEngine PROPERTY CXX_STANDARD 20)
@@ -87,7 +87,7 @@ file(GLOB IMGUI_SOURCES
 target_include_directories(MentalEngine PRIVATE ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 
 # Add ImGui sources to the executable
-target_sources(MentalEngine PRIVATE ${IMGUI_SOURCES} "SourceFiles/Utils.cpp" "Include/Shader.h")
+target_sources(MentalEngine PRIVATE ${IMGUI_SOURCES} "SourceFiles/Utils.cpp" "Include/Shader.h" "Include/EngineCamera.h")
 
 message(STATUS "GLEW include directory: ${GLEW_INCLUDE_DIR}")
 message(STATUS "GLEW library directory: ${GLEW_LIB_DIR}")

@@ -116,7 +116,7 @@ typedef struct Object
 	void applyShaders(const char* vsp, const char* fsp) {
 		std::string vertex_shader_source = loadShaderSource(vsp);
 		std::string fragment_shader_source = loadShaderSource(fsp);
-		
+
 		if (vertex_shader_source.empty() || fragment_shader_source.empty())
 		{
 			std::cerr << "ERROR: Failed to load empty shader.\n";
@@ -131,7 +131,7 @@ typedef struct Object
 		this->last_vs_mt = std::filesystem::last_write_time(this->vertex_shader_path);
 		this->last_fs_mt = std::filesystem::last_write_time(this->fragment_shader_path);
 	}
-	
+
 
 	void render(void) {
 		if (!this->child_comps.empty()) {
@@ -174,7 +174,7 @@ typedef struct Object
 		this->child_comps.push_back(obj);
 	}
 	*/
-	~Object() { }
+	~Object() {}
 } Object;
 
 #endif // OBJECT_H_

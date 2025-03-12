@@ -22,6 +22,14 @@ void ObjectManager::render() {
     }
 }
 
+void ObjectManager::set_projection_matrix(glm::mat4 projection) {
+    for (auto& obj : componentTree) {
+        GLuint projectionLoc = glGetUniformLocation(obj.shader_program, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, &projection[0][0]);
+    }
+
+}
+
 #ifdef MENTAL_BETA
 void ObjectManager::createObject(ObjectType obj_type) {
 
@@ -31,6 +39,6 @@ void ObjectManager::createObject(ObjectType obj_type) {
 ObjectManager::~ObjectManager() {
     for (auto& obj : componentTree) {
         if (obj.shader_program) { glDeleteProgram(obj.shader_program); }
-        
+
     }
 }

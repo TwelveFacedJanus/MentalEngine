@@ -21,7 +21,6 @@ void UI::initializeImGui(GLFWwindow* window) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.Fonts->AddFontFromFileTTF("fonts/ttf/JetBrainsMono-Regular.ttf", 15);
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable keyboard controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;    // Enable docking
     // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Disable viewports for now
 
