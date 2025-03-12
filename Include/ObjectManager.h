@@ -17,6 +17,7 @@ public:
     void addObject(Object obj);
     void render();
     void set_projection_matrix(glm::mat4 projection);
+    void parameter(const char* name);
     ~ObjectManager();
     std::vector<Object> componentTree;
 

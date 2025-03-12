@@ -13,6 +13,7 @@
 typedef enum ObjectType {
 	Triangle,
 	Node2D,
+	QuadFS,
 } ObjectType;
 
 typedef struct Object
@@ -36,7 +37,15 @@ typedef struct Object
 		else if (objt == ObjectType::Node2D) {
 			this->initialize_node2d();
 		}
+		else if (objt == ObjectType::QuadFS) {
+			this->initialize_quad_fs();
+		}
 		this->shader_program = 0;
+	}
+
+	void set_param(const char* param_name) {
+		GLint resolution_location = glGetUniformLocation(this->shader_program, param_name);
+		glUniform2f(resolution_location, 800, 600);
 	}
 
 	void initialize_node2d() {
@@ -65,6 +74,33 @@ typedef struct Object
 		glBindVertexArray(0);
 		this->EBO = 0;
 	}
+
+	void initialize_quad_fs(void) {
+		// Define the vertices for a rectangle (two triangles)
+		float vertices[] = {
+		  -1.0f,  1.0f,  0.0f,
+		   1.0f,  1.0f,  0.0f,
+		   1.0f, -1.0f,  0.0f,
+
+		  -1.0f,  1.0f,  0.0f,
+		   1.0f, -1.0f,  0.0f,
+		  -1.0f, -1.0f,  0.0f
+		};
+
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+
+		glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
 
 	void initialize_cube(void) {
 		float vertices[] = {
@@ -144,7 +180,13 @@ typedef struct Object
 			glUseProgram(this->shader_program);
 		}
 		glBindVertexArray(this->VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		if (this->obj_type = ObjectType::Triangle) {
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+		else if (this->obj_type = ObjectType::QuadFS) {
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		
 		glBindVertexArray(0);
 	}
 

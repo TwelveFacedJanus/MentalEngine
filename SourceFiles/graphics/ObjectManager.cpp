@@ -18,6 +18,7 @@ void ObjectManager::addObject(Object obj) {
 
 void ObjectManager::render() {
     for (auto& obj : componentTree) {
+        this->parameter("u_resolition");
         obj.render();
     }
 }
@@ -28,6 +29,13 @@ void ObjectManager::set_projection_matrix(glm::mat4 projection) {
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, &projection[0][0]);
     }
 
+}
+
+void ObjectManager::parameter( const char* param_name) {
+    for (auto& obj : componentTree) {
+        obj.set_param("u_resolution");
+    }
+    
 }
 
 #ifdef MENTAL_BETA

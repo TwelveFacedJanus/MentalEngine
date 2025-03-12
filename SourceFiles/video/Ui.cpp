@@ -1,6 +1,32 @@
 #include "../../Include/Ui.h"
 #include <functional>
+#include <sstream>
+#include <streambuf>
 
+// Buffer to capture the output
+std::stringstream outputBuffer;
+
+// Custom stream buffer to redirect output
+class OutputRedirector : public std::streambuf {
+public:
+    OutputRedirector(std::streambuf* src = nullptr) : src_(src) {}
+
+protected:
+    virtual int_type overflow(int_type c) override {
+        if (c != EOF) {
+            outputBuffer.put(c);
+        }
+        return c;
+    }
+
+    virtual std::streamsize xsputn(const char* s, std::streamsize count) override {
+        outputBuffer.write(s, count);
+        return count;
+    }
+
+private:
+    std::streambuf* src_;
+};
 
 static int InputTextCallback(ImGuiInputTextCallbackData* data) {
     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
@@ -10,6 +36,20 @@ static int InputTextCallback(ImGuiInputTextCallbackData* data) {
         data->Buf = &(*str)[0];
     }
     return 0;
+}
+
+void setupOutputRedirection() {
+    // Check if the original buffers are valid
+    if (std::cout.rdbuf() && std::cerr.rdbuf()) {
+        // Redirect stdout and stderr
+        OutputRedirector coutRedirector(std::cout.rdbuf());
+        OutputRedirector cerrRedirector(std::cerr.rdbuf());
+        std::cout.rdbuf(&coutRedirector);
+        std::cerr.rdbuf(&cerrRedirector);
+    }
+    else {
+        std::cerr << "Error: Original stream buffers are null." << std::endl;
+    }
 }
 
 UI::UI() : window(nullptr) {}
@@ -27,7 +67,11 @@ void UI::initializeImGui(GLFWwindow* window) {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    // Redirect stdout and stderr
+    //setupOutputRedirection();
 }
+
 void UI::default_frame(GLuint textureID) {
     if (isFileSelected) {
         auto currentModificationTime = fs::last_write_time(selectedFilePath);
@@ -165,7 +209,6 @@ void UI::MainMenu() {
     }
 }
 
-
 void UI::ProjectStructureTree() {
     ImGui::Begin("Components Tree");
 
@@ -173,65 +216,80 @@ void UI::ProjectStructureTree() {
 }
 
 void UI::FileSystem() {
-    ImGui::Begin("Filesystem");
+    ImGui::Begin("BootomControlCenter", nullptr);
 
-    static fs::path currentDir = fs::current_path();
-    ImGui::Text("Current Directory: %s", currentDir.string().c_str());
+    if (ImGui::BeginTabBar("Bottom control panel"))
+    {
+        if (ImGui::BeginTabItem("Filesystem")) {
+            static fs::path currentDir = fs::current_path();
+            ImGui::Text("Current Directory: %s", currentDir.string().c_str());
 
-    if (currentDir.has_parent_path() && ImGui::Button("Up")) {
-        currentDir = currentDir.parent_path();
-    }
-
-    // Начинаем создание таблицы с 3 колонками: иконка, имя, размер
-    if (ImGui::BeginTable("FileSystemTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-        // Заголовки колонок
-        ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, 20.0f);
-        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-        ImGui::TableHeadersRow();
-
-        for (const auto& entry : fs::directory_iterator(currentDir)) {
-            std::string entryName = entry.path().filename().string();
-            bool isDirectory = fs::is_directory(entry.status());
-
-            ImGui::TableNextRow();
-
-            // Колонка с иконкой
-            ImGui::TableSetColumnIndex(0);
-            if (isDirectory) {
-                ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "[FOLDER]");
-            }
-            else {
-                ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[FILE]");
+            if (currentDir.has_parent_path() && ImGui::Button("Up")) {
+                currentDir = currentDir.parent_path();
             }
 
-            // Колонка с именем
-            ImGui::TableSetColumnIndex(1);
-            if (isDirectory) {
-                if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-                    if (ImGui::IsMouseDoubleClicked(0)) {
-                        currentDir = entry.path();
+            // Начинаем создание таблицы с 3 колонками: иконка, имя, размер
+            if (ImGui::BeginTable("FileSystemTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                // Заголовки колонок
+                ImGui::TableSetupColumn("Icon", ImGuiTableColumnFlags_WidthFixed, 20.0f);
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                ImGui::TableHeadersRow();
+
+                for (const auto& entry : fs::directory_iterator(currentDir)) {
+                    std::string entryName = entry.path().filename().string();
+                    bool isDirectory = fs::is_directory(entry.status());
+
+                    ImGui::TableNextRow();
+
+                    // Колонка с иконкой
+                    ImGui::TableSetColumnIndex(0);
+                    if (isDirectory) {
+                        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "[FOLDER]");
+                    }
+                    else {
+                        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "[FILE]");
+                    }
+
+                    // Колонка с именем
+                    ImGui::TableSetColumnIndex(1);
+                    if (isDirectory) {
+                        if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                            if (ImGui::IsMouseDoubleClicked(0)) {
+                                currentDir = entry.path();
+                            }
+                        }
+                    }
+                    else {
+                        if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+                            selectedFilePath = entry.path().string();
+                            isFileSelected = true;
+                            loadFileContent(); // Загружаем содержимое файла
+                        }
+                    }
+
+                    // Колонка с размером
+                    ImGui::TableSetColumnIndex(2);
+                    if (!isDirectory) {
+                        ImGui::Text("%ld bytes", fs::file_size(entry));
                     }
                 }
-            }
-            else {
-                if (ImGui::Selectable(entryName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-                    selectedFilePath = entry.path().string();
-                    isFileSelected = true;
-                    loadFileContent(); // Загружаем содержимое файла
-                }
-            }
 
-            // Колонка с размером
-            ImGui::TableSetColumnIndex(2);
-            if (!isDirectory) {
-                ImGui::Text("%ld bytes", fs::file_size(entry));
+                ImGui::EndTable();
             }
+            ImGui::EndTabItem();
+
         }
 
-        ImGui::EndTable();
+        if (ImGui::BeginTabItem("debug console")) {
+            ImGui::Text("Debug Console Output:");
+            ImGui::BeginChild("DebugConsole", ImVec2(0, 0), true);
+            //ImGui::TextUnformatted(outputBuffer.str().c_str());
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
-
     ImGui::End();
 }
 
@@ -250,9 +308,10 @@ void UI::loadFileContent() {
         }
     }
 }
+
 void UI::ProjectStructureTree(ObjectManager& objectManager) {
     ImGui::Begin("Components Tree");
-    
+
     // Рекурсивная функция для отображения дерева объектов
     std::function<void(const Object&)> displayObjectTree = [&](const Object& obj) {
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -281,8 +340,6 @@ void UI::ProjectStructureTree(ObjectManager& objectManager) {
 
     ImGui::End();
 }
-
-
 
 UI::~UI() {
     // Очистка ImGui

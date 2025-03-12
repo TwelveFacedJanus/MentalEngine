@@ -114,9 +114,7 @@ void Window::initializeOpenGLSettings() {
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glViewport(0, 0, 800, 600); // Ensure this matches your window size
 
-    // Set the projection matrix
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    objm.set_projection_matrix(projection);
+
 }
 
 void Window::initializeImGui()
@@ -165,7 +163,9 @@ void Window::render() {
     glViewport(0, 0, fboWidth, fboHeight);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set clear color for FBO
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+    // Set the projection matrix
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    objm.set_projection_matrix(projection);
     // Render the triangle
     objm.render();
 
